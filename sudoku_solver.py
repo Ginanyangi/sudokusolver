@@ -1,14 +1,28 @@
 import tkinter as tk
 from tkinter import messagebox,filedialog
-#from PIL import ImageGrab
+from PIL import ImageGrab
 import random
 import time
+import os
 
 root = tk.Tk()
 root.title("Sudoku Solver")
-root.geometry("600x700")
+root.geometry("700x800")
+root.configure(bg='#f2f2f2')
 
 entries = [[None for _ in range(9)] for _ in range(9)]
+
+
+font = ('Arial', 18)
+bg_color ='white'
+selected_color = '#d1e7dd'
+highlight_color = '#f8d7da'
+border_color = '#bbbbbb'
+button_bg = '#4CAF50 '
+button_fg = '#ffffff'
+button_active_bg = '#45a049'
+
+
 
 def create_grid():
     for row in range(9):
@@ -21,8 +35,8 @@ def create_grid():
                 pad_y = (0,10)
             else:
                 pad_y = (0,0)
-            entry = tk.Entry(root, width = 4, font =('Arial',24), justify = 'center')
-            entry.grid(row=row, column=col, padx=pad_x, pady=pad_y)
+            entry = tk.Entry(root, width = 3, font =('Arial',24), justify = 'center', bg=bg_color, relief='solid', bd=1,highlightbackground=border_color, highlightthickness=0)
+            entry.grid(row=row +1, column=col, padx=pad_x, pady=pad_y)
             entries[row][col] = entry
 
 
@@ -81,21 +95,25 @@ def highlight_invalid_entries(board):
             if board[row][col] !=0 and not is_valid(board,row,col,board[row][col]):
                 entries[row][col].config(bg='red')
             else:
-                entries[row][col].config(bg='white')
+                entries[row][col].config(bg=bg_color)
 
 
 def solve_sudoku():
     board = get_board()
     if solve_board(board):
         set_board(board)
+        save_puzzle(board)
     else:
         messagebox.showinfo("Sudoku Solver", "No solution exists for this Sudoku puzzle")
+    highlight_invalid_entries(get_board())
 
 
 def clear_grid():
     for row in range(9):
         for col in  range(9):
             entries[row][col].delete(0, tk.END) 
+            entries[row][col].config(bg=bg_color)
+    reset_timer()
 
 
 def generate_puzzle(difficulty):
@@ -135,14 +153,14 @@ def take_screenshot():
     y = root.winfo_rooty()
     x1 = x + root.winfo_width()
     y1 = y + root.winfo_height()
-   # ImageGrab.grab().crop((x,y,x1,y1)).save("sudoku_screenshot.png")
-    #messagebox.showinfo("Sudoku Solver", "Screenshot saved as sudoku_screenshot.png")
+    ImageGrab.grab().crop((x,y,x1,y1)).save("sudoku_screenshot.png")
+messagebox.showinfo("Sudoku Solver", "Screenshot saved as sudoku_screenshot.png")
 
 
 def show_rules():
     rules_window = tk.Toplevel(root)
     rules_window.title("Sudoku Rules")
-    rules_window.geometry("400x300")
+    rules_window.geometry("400x250")
     rules_text = (
         "Sudoku Rules:\n\n"
         "1. Each row must contain the digits 1 to 9 without repetition.\n"
@@ -155,20 +173,37 @@ def show_rules():
     label.pack()
 
 
-#start_time = time.time()
-#timer_label = tk.Label(root,text="Time: 0s", font=('Arial',12))  
-#timer_label.grid(row=12,column=0,columnspan=9, pady=10)
+start_time = time.time()
+timer_label = tk.Label(root,text="Time: 0s", font=('Arial',12),bg='#f2f2f2' )  
+timer_label.grid(row=12,column=0,columnspan=9, pady=10)
 
-#def update_timer():
- #   elapsed_time =  int(time.time() - start_time)
-  #  timer_label.config(text=f'Time: {elapsed_time}s')
-   # root.after(1000,update_timer)
+def update_timer():
+    elapsed_time =  int(time.time() - start_time)
+    timer_label.config(text=f'Time: {elapsed_time}s')
+    root.after(1000,update_timer)
 
 
 def reset_timer():
     global start_time
     start_time = time.time()
-   # timer_label.config(text="Time: 0s")
+    timer_label.config(text="Time: 0s")
+
+def save_puzzle(board):
+    try:
+        file_path = os.path.join(os.getcwd(), "solved_puzzles.txt")
+        with open(file_path, "a") as file:
+            for row in board:
+                file.write(" ".join(map(str, row)) + "\n")
+            file.write("\n")  
+        print(f"Puzzle saved successfully to {file_path}.")
+        messagebox.showinfo("Sudoku Solver", f"Solved puzzle saved to solved_puzzles.txt.")
+    except Exception as e:
+        print(f"Error saving puzzle: {e}")
+        messagebox.showerror("Sudoku Solver", f"Error saving puzzle: {e}")
+
+def manual_save():
+    board = get_board()
+    save_puzzle(board)
 
 create_grid()
 
@@ -187,6 +222,9 @@ screenshot_button.grid(row=0, column=2, padx=10)
 rules_button = tk.Button(button_frame, text="Rules", command=show_rules, width=10, font=('Arial', 12))
 rules_button.grid(row=0, column=3, padx=10)
 
+save_button = tk.Button(button_frame, text="Save", command=manual_save, width=10, font=('Arial', 12))
+save_button.grid(row=0, column=4, padx=10)
+
 difficulty_frame = tk.Frame(root)
 difficulty_frame.grid(row=11,column=0, columnspan=9, pady=10)
 tk.Label(difficulty_frame, text='Select Difficulty:').pack(side=tk.LEFT)
@@ -194,6 +232,6 @@ tk.Button(difficulty_frame, text="Easy", command=lambda: set_difficulty('Easy'))
 tk.Button(difficulty_frame, text="Medium", command=lambda: set_difficulty('Medium')).pack(side=tk.LEFT)
 tk.Button(difficulty_frame, text="Hard", command=lambda: set_difficulty('Hard')).pack(side=tk.LEFT)
 
-#root.after(1000,update_timer)
+update_timer()
 
 root.mainloop()
