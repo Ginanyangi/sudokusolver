@@ -35,9 +35,11 @@ def create_grid():
                 pad_y = (0,10)
             else:
                 pad_y = (0,0)
-            entry = tk.Entry(root, width = 3, font =('Arial',24), justify = 'center', bg=bg_color, relief='solid', bd=1,highlightbackground=border_color, highlightthickness=0)
+            entry = tk.Entry(root, width = 3, font =('Arial',24), justify = 'center', bg=bg_color, relief='solid', bd=1,highlightbackground=border_color, highlightthickness=0, state=tk.NORMAL)
             entry.grid(row=row +1, column=col, padx=pad_x, pady=pad_y)
             entries[row][col] = entry
+            
+
 
 
 
@@ -148,13 +150,17 @@ def set_difficulty(level):
         generate_puzzle(66)
 
 
+screenshot_counter = 0
 def take_screenshot():
+    global screenshot_counter
     x = root.winfo_rootx()
     y = root.winfo_rooty()
     x1 = x + root.winfo_width()
     y1 = y + root.winfo_height()
-    ImageGrab.grab().crop((x,y,x1,y1)).save("sudoku_screenshot.png")
-messagebox.showinfo("Sudoku Solver", "Screenshot saved as sudoku_screenshot.png")
+    filename = f"sudoku_screenshot_{screenshot_counter}.png"
+    ImageGrab.grab().crop((x,y,x1,y1)).save(filename)
+    screenshot_counter += 1
+messagebox.showinfo("Sudoku Solver", "Screenshot saved as {filename}")
 
 
 def show_rules():
